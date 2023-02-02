@@ -64,7 +64,7 @@ class AbstractDataFetcher(ABC):
             raise MisconfigurationException("`prefetch_batches` should at least be 0.")
         self.prefetch_batches = prefetch_batches
         self._dataloader: Optional[Iterable] = None
-        self.dataloader_iter: Optional[Iterator] = None
+        self._dataloader_iter: Optional[Iterator] = None
         self.fetched: int = 0
         self.done: bool = False
         self._start_profiler = _profile_nothing
@@ -82,16 +82,14 @@ class AbstractDataFetcher(ABC):
         return self._dataloader
 
     @property
-    def loader_iters(self) -> Any:
-        if self.dataloader_iter is None:
+    def dataloader_iter(self) -> Iterator:
+        if self._dataloader_iter is None:
             raise MisconfigurationException("The `dataloader_iter` isn't available outside the __iter__ context.")
-        if isinstance(self.dataloader, CombinedLoader):
-            return self.dataloader_iter.loader_iters
-        return self.dataloader_iter
+        return self._dataloader_iter
 
     def __iter__(self) -> "AbstractDataFetcher":
         self.reset()
-        self.dataloader_iter = iter(self.dataloader)
+        self._dataloader_iter = iter(self.dataloader)
         self.prefetching()
         return self
 
@@ -104,11 +102,10 @@ class AbstractDataFetcher(ABC):
 
     def teardown(self) -> None:
         self.reset()
-        if isinstance(self._dataloader, CombinedLoader):
-            self._dataloader.reset()
         if isinstance(self._dataloader, DataLoader):
+            # FIXME(carlos): make this an utility fn
             CombinedLoader._shutdown_workers_and_reset_iterator(self._dataloader)
-        self.dataloader_iter = None
+        self._dataloader_iter = None
 
 
 def _no_op_batch_to_device(batch: Any) -> Any:

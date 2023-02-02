@@ -21,7 +21,6 @@ from lightning.pytorch.loops.epoch.training_epoch_loop import _OUTPUTS_TYPE as _
 from lightning.pytorch.loops.progress import Progress
 from lightning.pytorch.loops.utilities import _is_max_limit_reached, _set_sampler_epoch
 from lightning.pytorch.trainer.connectors.logger_connector.result import _ResultCollection
-from lightning.pytorch.trainer.supporters import CombinedLoader
 from lightning.pytorch.utilities.exceptions import MisconfigurationException, SIGTERMException
 from lightning.pytorch.utilities.fetching import AbstractDataFetcher, DataFetcher, DataLoaderIterDataFetcher
 from lightning.pytorch.utilities.model_helpers import is_overridden
@@ -244,7 +243,6 @@ class _FitLoop(_Loop):
         self._outputs = []
 
         if self.trainer.train_dataloader is not None:
-            assert isinstance(self.trainer.train_dataloader, CombinedLoader)
             _set_sampler_epoch(self.trainer.train_dataloader, self.epoch_progress.current.processed)
 
         # changing gradient according accumulation_scheduler

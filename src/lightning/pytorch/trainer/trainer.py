@@ -76,7 +76,6 @@ from lightning.pytorch.trainer.connectors.logger_connector import LoggerConnecto
 from lightning.pytorch.trainer.connectors.logger_connector.result import _OUT_DICT, _PBAR_DICT, _ResultCollection
 from lightning.pytorch.trainer.connectors.signal_connector import SignalConnector
 from lightning.pytorch.trainer.states import RunningStage, TrainerFn, TrainerState, TrainerStatus
-from lightning.pytorch.trainer.supporters import CombinedLoader
 from lightning.pytorch.utilities import GradClipAlgorithmType, parsing
 from lightning.pytorch.utilities.argparse import (
     _defaults_from_env_vars,
@@ -147,7 +146,6 @@ class Trainer:
         replace_sampler_ddp: bool = True,
         detect_anomaly: bool = False,
         plugins: Optional[Union[PLUGIN_INPUT, List[PLUGIN_INPUT]]] = None,
-        multiple_trainloader_mode: str = "max_size_cycle",
         inference_mode: bool = True,
     ) -> None:
         r"""
@@ -298,12 +296,6 @@ class Trainer:
             enable_model_summary: Whether to enable model summarization by default.
                 Default: ``True``.
 
-            multiple_trainloader_mode: How to loop over the datasets when there are multiple train loaders.
-                In 'max_size_cycle' mode, the trainer ends one epoch when the largest dataset is traversed,
-                and smaller datasets reload when running out of their data. In 'min_size' mode, all the datasets
-                reload when reaching the minimum length of datasets.
-                Default: ``"max_size_cycle"``.
-
             inference_mode: Whether to use :func:`torch.inference_mode` or :func:`torch.no_grad` during
                 evaluation (``validate``/``test``/``predict``).
         """
@@ -316,7 +308,7 @@ class Trainer:
             default_root_dir = os.fspath(default_root_dir)
 
         # init connectors
-        self._data_connector = DataConnector(self, multiple_trainloader_mode)
+        self._data_connector = DataConnector(self)
 
         self._accelerator_connector = AcceleratorConnector(
             devices=devices,
@@ -431,7 +423,7 @@ class Trainer:
         self.state = TrainerState()
         self.num_training_batches = float("inf")
 
-        self.train_dataloader: Optional[Union[CombinedLoader, TRAIN_DATALOADERS]] = None
+        self.train_dataloader: Optional[TRAIN_DATALOADERS] = None
 
         self.num_sanity_val_batches: List[Union[int, float]] = []
         self.num_test_batches: List[Union[int, float]] = []
@@ -1339,25 +1331,16 @@ class Trainer:
         # automatically add samplers
         self.train_dataloader = apply_to_collection(
             self.train_dataloader,
-            (DataLoader, CombinedLoader),
+            DataLoader,
             self._data_connector._prepare_dataloader,
             mode=RunningStage.TRAINING,
         )
-        loaders = (
-            self.train_dataloader.loaders
-            if isinstance(self.train_dataloader, CombinedLoader)
-            else self.train_dataloader
-        )
 
         # check the workers recursively
-        apply_to_collection(loaders, DataLoader, self._data_connector._worker_check, "train_dataloader")
+        apply_to_collection(self.train_dataloader, DataLoader, self._data_connector._worker_check, "train_dataloader")
 
         # add worker_init_fn for correct seeding in worker processes
-        apply_to_collection(loaders, DataLoader, _auto_add_worker_init_fn, rank=self.global_rank)
-
-        # wrap the sequence of train loaders to a CombinedLoader object for computing the num_training_batches
-        if not isinstance(self.train_dataloader, CombinedLoader):
-            self.train_dataloader = CombinedLoader(loaders, self._data_connector.multiple_trainloader_mode)
+        apply_to_collection(self.train_dataloader, DataLoader, _auto_add_worker_init_fn, rank=self.global_rank)
 
         module = model or self.lightning_module or self.datamodule
         orig_train_batches = self.num_training_batches = (

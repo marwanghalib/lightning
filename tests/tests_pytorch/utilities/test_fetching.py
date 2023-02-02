@@ -130,9 +130,9 @@ def test_misconfiguration_error():
     with pytest.raises(
         MisconfigurationException, match="The `dataloader_iter` isn't available outside the __iter__ context."
     ):
-        fetcher.loader_iters
+        fetcher.dataloader_iter
     iter(fetcher)
-    assert fetcher.loader_iters
+    assert fetcher.dataloader_iter
 
 
 def get_cycles_per_ms() -> float:

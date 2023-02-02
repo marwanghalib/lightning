@@ -301,13 +301,11 @@ def _adjust_batch_size(
         rank_zero_info(f"Batch size {batch_size} {desc}, trying batch size {new_size}")
 
     if trainer.state.fn == "fit":
-        from lightning.pytorch.trainer.supporters import CombinedLoader
-
         if trainer.train_dataloader is None:
             trainer.reset_train_dataloader()
 
-        assert isinstance(trainer.train_dataloader, CombinedLoader)
         if not _is_valid_batch_size(new_size, trainer.train_dataloader, trainer):
+            # FIXME(carlos): why dataset here?
             # at this moment, `train_dataloader` is already a CombinedLoader. len can return a size or infinity
             new_size = min(new_size, len(trainer.train_dataloader.dataset))  # type: ignore[arg-type]
     else:

@@ -28,7 +28,6 @@ from lightning.pytorch.accelerators.ipu import IPUAccelerator
 from lightning.pytorch.overrides.distributed import UnrepeatedDistributedSamplerWrapper
 from lightning.pytorch.strategies import DDPSpawnStrategy
 from lightning.pytorch.trainer.states import RunningStage, TrainerFn
-from lightning.pytorch.trainer.supporters import CombinedLoader, CycleIterator
 from lightning.pytorch.utilities.data import _is_dataloader_shuffled, _update_dataloader, has_len_all_ranks
 from lightning.pytorch.utilities.exceptions import MisconfigurationException
 from lightning.pytorch.utilities.model_helpers import is_overridden
@@ -40,9 +39,8 @@ warning_cache = WarningCache()
 
 
 class DataConnector:
-    def __init__(self, trainer: "pl.Trainer", multiple_trainloader_mode: str = "max_size_cycle"):
+    def __init__(self, trainer: "pl.Trainer"):
         self.trainer = trainer
-        self.multiple_trainloader_mode = multiple_trainloader_mode
         self._train_dataloader_source = _DataLoaderSource(None, "")
         self._val_dataloader_source = _DataLoaderSource(None, "")
         self._test_dataloader_source = _DataLoaderSource(None, "")
@@ -234,32 +232,16 @@ class DataConnector:
 
     # TODO: shuffle here is kept for BC. Remove it once data_loading.py is removed (#11248)
     def _prepare_dataloader(
-        self, dataloader: Any, shuffle: Optional[bool] = None, mode: Optional[RunningStage] = None
+        self, dataloader: Iterable, shuffle: Optional[bool] = None, mode: Optional[RunningStage] = None
     ) -> Any:
         """This function handles the following functionalities:
 
         - Injecting a `DistributedDataSamplerWrapper` into the `DataLoader` if on a distributed environment
-        - Wrapping the datasets and samplers into fault-tolerant components
         - Wrapping the dataloader based on strategy-specific logic
         """
-        if isinstance(dataloader, CombinedLoader):
-            # apply `_prepare_dataloader` on all the collection of loaders
-            dataloader.loaders = apply_to_collection(
-                dataloader.loaders, (DataLoader, CycleIterator), self._prepare_dataloader, shuffle, mode=mode
-            )
-            # the length need to recomputed across all dataloaders in case of special behavior.
-            dataloader._apply_cycle_iterator_length()
-            return dataloader
-
         # don't do anything if it's not a dataloader
-        if not isinstance(dataloader, (DataLoader, CycleIterator)):
+        if not isinstance(dataloader, DataLoader):
             return dataloader
-
-        cycle_iterator: Optional[CycleIterator] = None
-
-        if isinstance(dataloader, CycleIterator):
-            cycle_iterator = dataloader
-            dataloader = dataloader.loader
 
         if (
             self._requires_distributed_sampler(dataloader)  # sets the distributed sampler
@@ -276,10 +258,6 @@ class DataConnector:
             dataloader = _update_dataloader(dataloader, sampler, mode=mode)
 
         dataloader = self.trainer.strategy.process_dataloader(dataloader)
-
-        if cycle_iterator is not None:
-            cycle_iterator.loader = dataloader
-            return cycle_iterator
 
         return dataloader
 
@@ -359,7 +337,7 @@ class DataConnector:
 
         for loader in dataloaders:
             apply_to_collection(
-                loader.loaders if isinstance(loader, CombinedLoader) else loader,
+                loader,
                 DataLoader,
                 self._check_eval_shuffling,
                 mode=mode,
