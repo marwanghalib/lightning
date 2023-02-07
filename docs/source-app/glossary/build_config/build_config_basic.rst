@@ -42,7 +42,7 @@ Define the requirements in the code
 ***********************************
 
 Instead of listing the requirements in a file, you can also pass them to the LightningWork at runtime using the
-:class:`~lightning_app.utilities.packaging.build_config.BuildConfig`:
+:class:`~lightning.utilities.packaging.build_config.BuildConfig`:
 
 .. code-block:: python
     :emphasize-lines: 7

@@ -7,7 +7,7 @@ lightning.app.runners
     :local:
     :backlinks: top
 
-.. currentmodule:: lightning_app.runners
+.. currentmodule:: lightning.runners
 
 Lightning Core
 ______________

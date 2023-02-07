@@ -18,7 +18,7 @@ The LightningFlow has a ``schedule`` method which can be used to schedule your c
 .. code-block:: python
 
     from lightning_app import LightningWork, LightningFlow
-    from lightning_app.storage import Path
+    from lightning.storage import Path
 
 
     class MyFlow(LightningFlow):
@@ -51,7 +51,7 @@ In the example above, the line ``self.schedule("hourly")`` will return ``True`` 
 .. code-block:: python
 
     from lightning_app import LightningFlow
-    from lightning_app.structures import List
+    from lightning.structures import List
 
     class ScheduledDAG(LightningFlow):
         def __init__(self):

@@ -57,7 +57,7 @@ In order to create a Drive, you simply need to pass its name with the prefix ``l
 
 .. code-block:: python
 
-    from lightning_app.storage import Drive
+    from lightning.storage import Drive
 
     # The identifier of this Drive is ``drive_1``
     # Note: You need to add Lightning protocol ``lit://`` as a prefix.
@@ -72,7 +72,7 @@ Any component can create a drive object for ``lit://`` Drives.
 .. code-block:: python
 
     from lightning_app import LightningFlow, LightningWork
-    from lightning_app.storage import Drive
+    from lightning.storage import Drive
 
 
     class Flow(LightningFlow):
@@ -104,7 +104,7 @@ An S3 Drive supports list and get actions (for now).
 
 .. code-block:: python
 
-    from lightning_app.storage import Drive
+    from lightning.storage import Drive
 
     drive = Drive("lit://drive")
 
@@ -137,7 +137,7 @@ Here is an illustrated code example on how to create drives within Works.
 .. code-block:: python
 
     from lightning_app import LightningFlow, LightningWork, LightningApp
-    from lightning_app.storage import Drive
+    from lightning.storage import Drive
 
 
     class Work_A(LightningWork):
