@@ -22,10 +22,10 @@
 /docs/source-pytorch/index.rst              @williamfalcon @lantiga
 /docs/source-pytorch/levels                 @williamfalcon @RobertLaurella
 /docs/source-pytorch/expertise_levels       @williamfalcon @RobertLaurella
-/docs/source-app/                           @williamfalcon @RobertLaurella @tchaton @awaelchli
-/docs/source-app/conf.py                    @borda @awaelchli @carmocca
-/docs/source-app/index.rst                  @williamfalcon @lantiga
-/docs/source-app/expertise_levels           @williamfalcon @RobertLaurella
+/docs/source-lit/                           @williamfalcon @RobertLaurella @tchaton @awaelchli
+/docs/source-lit/conf.py                    @borda @awaelchli @carmocca
+/docs/source-lit/index.rst                  @williamfalcon @lantiga
+/docs/source-lit/expertise_levels           @williamfalcon @RobertLaurella
 
 # PyTorch Lightning
 /src/lightning/pytorch                      @williamfalcon @awaelchli @carmocca @justusschock
