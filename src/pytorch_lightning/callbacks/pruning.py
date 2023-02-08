@@ -444,14 +444,18 @@ class ModelPruning(Callback):
         parameters = parameter_names or ModelPruning.PARAMETER_NAMES
 
         current_modules = [m for m in pl_module.modules() if not isinstance(m, _MODULE_CONTAINERS)]
+        for m in current_modules:
+            print("\nmodule:)
+            print(m)
+        for p in parameters:
+            print("\nparameter:")
+            print(type(p))
+            print(p)
 
         if not parameters_to_prune:
             print("HEY THIS IS MARWAN'S CODE")
             parameters_to_prune = [
-                (m, p)
-                for p in parameters
-                for m in current_modules
-                if getattr(m, p, None) is not None and isinstance(p, Tensor)
+                (m, p) for p in parameters for m in current_modules if getattr(m, p, None) is not None and isinstance(p, Tensor)
             ]
         elif (
             isinstance(parameters_to_prune, (list, tuple))
