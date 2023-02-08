@@ -445,7 +445,7 @@ class ModelPruning(Callback):
 
         current_modules = [m for m in pl_module.modules() if not isinstance(m, _MODULE_CONTAINERS)]
         for m in current_modules:
-            print("\nmodule:)
+            print("\nmodule:")
             print(m)
         for p in parameters:
             print("\nparameter:")
