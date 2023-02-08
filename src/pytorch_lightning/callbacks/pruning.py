@@ -477,7 +477,8 @@ class ModelPruning(Callback):
                 "The provided `parameters_to_prune` should either be list of tuple"
                 " with 2 elements: (nn.Module, parameter_name_to_prune) or None"
             )
-
+        print("parameters_to_prune:")
+        print(parameters_to_prune)
         return parameters_to_prune
 
     @staticmethod
