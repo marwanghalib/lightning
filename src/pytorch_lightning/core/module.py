@@ -1923,10 +1923,7 @@ class LightningModule(
         if _TORCH_GREATER_EQUAL_1_13:
             self._register_load_state_dict_pre_hook(pre_load_state_dict_hook, True)
         else:
-            # We need to make sure the self inside the method is a weakref proxy
-            self.__class__._register_load_state_dict_pre_hook(
-                weakref.proxy(self), pre_load_state_dict_hook, True  # type: ignore[arg-type]
-            )
+            self._register_load_state_dict_pre_hook(pre_load_state_dict_hook, True)
 
     @classmethod
     def from_compiled(cls, model: "torch._dynamo.OptimizedModule") -> "pl.LightningModule":
